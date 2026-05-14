@@ -3,6 +3,7 @@ using System;
 using Ecommerce.System.Infrastructure.Persistence.PostgreSQL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Ecommerce.System.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260514165216_SyncModelsChange")]
+    partial class SyncModelsChange
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -62,15 +65,18 @@ namespace Ecommerce.System.Migrations
                     b.Property<Guid>("ClientId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("OrderDate")
+                    b.Property<DateTime>("DateoftheOrder")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OrderAddress")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("text");
 
-                    b.Property<decimal>("TotalAmount")
+                    b.Property<decimal>("TotalValue")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
@@ -79,42 +85,18 @@ namespace Ecommerce.System.Migrations
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("Ecommerce.System.Core.Models.OrderItem", b =>
-                {
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<Guid?>("OrderId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("ProductId", "Quantity", "UnitPrice");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("OrderItem");
-                });
-
             modelBuilder.Entity("Ecommerce.System.Core.Models.OrderStatus", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("ChangedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Priceatthetimeofpurchase")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<Guid>("ProductVariantId")
                         .HasColumnType("uuid");
@@ -122,15 +104,11 @@ namespace Ecommerce.System.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderStatus");
+                    b.ToTable("OrderStatuses");
                 });
 
             modelBuilder.Entity("Ecommerce.System.Core.Models.Product", b =>
@@ -161,7 +139,7 @@ namespace Ecommerce.System.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("EAN")
+                    b.Property<string>("Ean")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -206,18 +184,10 @@ namespace Ecommerce.System.Migrations
                     b.ToTable("Attributes");
                 });
 
-            modelBuilder.Entity("Ecommerce.System.Core.Models.OrderItem", b =>
-                {
-                    b.HasOne("Ecommerce.System.Core.Models.Order", null)
-                        .WithMany("Items")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
             modelBuilder.Entity("Ecommerce.System.Core.Models.OrderStatus", b =>
                 {
                     b.HasOne("Ecommerce.System.Core.Models.Order", null)
-                        .WithMany("Statuses")
+                        .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -243,9 +213,7 @@ namespace Ecommerce.System.Migrations
 
             modelBuilder.Entity("Ecommerce.System.Core.Models.Order", b =>
                 {
-                    b.Navigation("Items");
-
-                    b.Navigation("Statuses");
+                    b.Navigation("OrderItems");
                 });
 
             modelBuilder.Entity("Ecommerce.System.Core.Models.Product", b =>

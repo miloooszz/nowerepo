@@ -1,11 +1,25 @@
-﻿namespace Ecommerce.System.Core.Models
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
+namespace Ecommerce.System.Core.Models
 {
+    [BsonIgnoreExtraElements]
     public class Product
     {
-        public Guid Id { get; set; } // Globalna unikalność
-        public string Name { get; set; }
-        public string Brand { get; set; }
+        [BsonId]
+        [BsonGuidRepresentation(GuidRepresentation.Standard)]
+        public Guid Id { get; set; }
+
+        [BsonElement("name")]
+        public string Name { get; set; } = string.Empty;
+
+        [BsonElement("brand")]
+        public string Brand { get; set; } = string.Empty;
+
+        [BsonElement("createDate")]
         public DateTime CreateDate { get; set; }
-        public List<ProductVariant> Variants { get; set; } // Relacja 1:W
+
+        [BsonElement("variants")]
+        public List<ProductVariant> Variants { get; set; } = new();
     }
 }

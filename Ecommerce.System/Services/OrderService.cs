@@ -1,6 +1,9 @@
 ﻿using Ecommerce.System.Core.Interfaces;
 using Ecommerce.System.Core.Models;
-using Ecommerce.System.Controllers;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Ecommerce.System.Services
 {
@@ -14,63 +17,78 @@ namespace Ecommerce.System.Services
             _productRepository = productRepository;
             _orderRepository = orderRepository;
         }
-        // Nowa metoda, którą wywoła kontroler
+
         public async Task<IEnumerable<Order>> GetAllOrdersAsync()
         {
-            // Serwis deleguje zadanie do repozytorium
             return await _orderRepository.GetAllAsync();
         }
 
-        // Zmieniliśmy parametr z List<(Guid, int)> na List<BasketItem>
         public async Task<(bool Success, string Message)> PlaceOrderAsync(Guid clientId, List<BasketItem> basket)
         {
-            // 1. Najpierw tworzymy "nagłówek" zamówienia
+            if (basket == null || !basket.Any())
+                return (false, "Koszyk jest pusty.");
+
+            // 1. Inicjalizacja nagłówka zamówienia[cite: 1]
             var newOrder = new Order
             {
                 Id = Guid.NewGuid(),
                 ClientId = clientId,
-                DateoftheOrder = DateTime.UtcNow,
-                Status = "Nowe",
-                TotalValue = 0,
-                OrderItems = new List<OrderStatus>() // Inicjalizacja listy 📦
+                OrderDate = DateTime.UtcNow,
+                Status = "New",
+                TotalAmount = 0,
+                Items = new List<OrderItem>()
             };
 
-            // 2. Teraz pętla, którą edytujemy:
+            var processedProducts = new List<Product>();
+
+            // 2. Przetwarzanie koszyka i walidacja[cite: 1]
             foreach (var item in basket)
             {
-                // Najpierw standardowe sprawdzenia (szukanie produktu i wariantu)
+                // Pobranie produktu zawierającego dany wariant
                 var product = await _productRepository.GetByIdAsync(item.VariantId);
-                if (product == null) return (false, "Nie znaleziono produktu.");
+                if (product == null)
+                    return (false, $"Nie znaleziono produktu dla wariantu: {item.VariantId}");
 
-                var variant = product.Variants.FirstOrDefault(w => w.Id == item.VariantId);
-                if (variant == null) return (false, "Nie znaleziono wariantu.");
+                var variant = product.Variants.FirstOrDefault(v => v.Id == item.VariantId);
+                if (variant == null)
+                    return (false, "Błąd wewnętrzny: Nie znaleziono wariantu w produkcie.");
 
-                if (variant.StockStatus < item.Amount) return (false, "Brak towaru.");
+                // Sprawdzenie dostępności towaru[cite: 1]
+                if (variant.StockStatus < item.Amount)
+                    return (false, $"Brak towaru dla: {product.Name}. Dostępne: {variant.StockStatus}, żądano: {item.Amount}");
 
-                // --- TUTAJ WKLEJASZ TEN FRAGMENT ---
-                var detail = new OrderStatus
+                // Tworzenie pozycji zamówienia[cite: 1]
+                var orderItem = new OrderItem
                 {
-                    Id = Guid.NewGuid(),
-                    OrderId = newOrder.Id,
-                    ProductVariantId = item.VariantId,
+                    ProductId = variant.Id,
                     Quantity = item.Amount,
-                    Priceatthetimeofpurchase = variant.Price
+                    UnitPrice = variant.Price
                 };
 
-                newOrder.OrderItems.Add(detail);
-                // -----------------------------------
+                newOrder.Items.Add(orderItem);
+                newOrder.TotalAmount += (variant.Price * item.Amount);
 
-                // Na koniec pętli aktualizujemy stany i ceny
+                // Aktualizacja stanu magazynowego w pamięci[cite: 1]
                 variant.StockStatus -= item.Amount;
-                newOrder.TotalValue += variant.Price * item.Amount;
-
-                await _productRepository.UpdateAsync(product);
+                processedProducts.Add(product);
             }
 
-            // 3. Zapisujemy wszystko jednym strzałem
-            var result = await _orderRepository.SaveOrderAsync(newOrder);
-            return result ? (true, "Zamówienie złożone!") : (false, "Błąd zapisu.");
-        }
+            // 3. Zapis zmian w produktach (aktualizacja magazynu)[cite: 1]
+            foreach (var prod in processedProducts)
+            {
+                await _productRepository.UpdateAsync(prod);
+            }
 
+            // 4. Finalny zapis zamówienia do bazy danych[cite: 1]
+            var result = await _orderRepository.SaveOrderAsync(newOrder);
+
+            if (!result)
+            {
+                // W prawdziwym systemie tutaj należałoby przywrócić stany magazynowe (Rollback)
+                return (false, "Wystąpił krytyczny błąd podczas zapisywania zamówienia w bazie.");
+            }
+
+            return (true, "Zamówienie złożone pomyślnie!");
+        }
     }
 }

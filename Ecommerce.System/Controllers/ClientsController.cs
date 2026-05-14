@@ -1,36 +1,32 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Ecommerce.System.Core.Interfaces;
 using Ecommerce.System.Core.Models;
-using Ecommerce.System.Infrastructure.Persistence.PostgreSQL;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.System.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class ClientsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IClientRepository _clientRepository;
 
-        public ClientsController(AppDbContext context)
+        public ClientsController(IClientRepository clientRepository)
         {
-            _context = context;
+            _clientRepository = clientRepository;
         }
 
-        // POST: api/Clients
         [HttpPost]
-        public async Task<IActionResult> CreateClient(Client client)
+        public async Task<IActionResult> CreateClient([FromBody] Client client)
         {
-            // Zakładam, że w AppDbContext masz teraz: public DbSet<Client> Clients { get; set; }
-            _context.Clients.Add(client);
-            await _context.SaveChangesAsync();
+            await _clientRepository.AddAsync(client);
             return Ok(client);
         }
 
-        // GET: api/Clients
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Client>>> GetClients()
+        public async Task<IActionResult> GetAll()
         {
-            return await _context.Clients.ToListAsync();
+            var clients = await _clientRepository.GetAllAsync();
+            return Ok(clients);
         }
     }
 }

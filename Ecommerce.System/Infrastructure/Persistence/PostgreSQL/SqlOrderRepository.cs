@@ -1,7 +1,6 @@
 ﻿using Ecommerce.System.Core.Interfaces;
 using Ecommerce.System.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 namespace Ecommerce.System.Infrastructure.Persistence.PostgreSQL
 {
@@ -9,22 +8,19 @@ namespace Ecommerce.System.Infrastructure.Persistence.PostgreSQL
     {
         private readonly AppDbContext _context;
 
+        // NAPRAWA: Zmieniono nazwę z SqlClientRepository na SqlOrderRepository
         public SqlOrderRepository(AppDbContext context)
         {
             _context = context;
         }
 
-        public async Task<bool> SaveOrderAsync(Order Order)
+        public async Task<bool> SaveOrderAsync(Order order)
         {
             try
             {
-                // Entity Framework automatycznie obsłuży to w ramach jednej transakcji bazy danych,
-                await _context.Orders.AddAsync(Order);
-
-                // Zapisujemy zmiany w bazie
-                var result = await _context.SaveChangesAsync();
-
-                return result > 0;
+                await _context.Orders.AddAsync(order);
+                await _context.SaveChangesAsync();
+                return true;
             }
             catch (Exception)
             {
@@ -32,30 +28,31 @@ namespace Ecommerce.System.Infrastructure.Persistence.PostgreSQL
             }
         }
 
-        public async Task<IEnumerable<Order>> GetByClientIdAsync(Guid ClientId)
+        public async Task<IEnumerable<Order>> GetAllAsync()
         {
-            // Pobieramy historię zamówień klienta. 
             return await _context.Orders
-                .Where(z => z.ClientId == ClientId)
-                .OrderByDescending(z => z.DateoftheOrder)
+                .Include(o => o.Items)
                 .ToListAsync();
         }
 
-        public async Task<Order> GetOrderDetailsAsync(Guid orderId)
+        public async Task<IEnumerable<Order>> GetByClientIdAsync(Guid clientId)
         {
-            // W modelu relacyjnym musimy wykonać operację 'Include' (Join), 
-            // aby pobrać pozycje zamówienia razem z nagłówkiem.
-            // To będzie jeden z kluczowych punktów Twojej analizy wydajności (SQL Joins vs NoSQL Embedding).
             return await _context.Orders
-                .Include(z => _context.OrderStatuses.Where(p => p.  OrderId == orderId))
-                .FirstOrDefaultAsync(z => z.Id == orderId);
+                .Include(o => o.Items)
+                .Where(o => o.ClientId == clientId)
+                .ToListAsync();
         }
-        public async Task<IEnumerable<Order>> GetAllAsync()
+
+        public async Task<Order?> GetByIdAsync(Guid id)
         {
-            // Pobiera wszystkie zamówienia z bazy
             return await _context.Orders
-            .Include(o => o.OrderItems) 
-            .ToListAsync();
+                .Include(o => o.Items)
+                .FirstOrDefaultAsync(o => o.Id == id);
+        }
+
+        public async Task<Order?> GetOrderDetailsAsync(Guid orderId)
+        {
+            return await GetByIdAsync(orderId);
         }
     }
 }
