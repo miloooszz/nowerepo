@@ -15,7 +15,6 @@ namespace Ecommerce.System.Controllers
             _productRepository = productRepository;
         }
 
-        // Metoda do dodawania produktów 
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] Product product)
         {
@@ -34,7 +33,6 @@ namespace Ecommerce.System.Controllers
             return Ok(product);
         }
 
-        // Metoda do pobierania wszystkich produktów
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
