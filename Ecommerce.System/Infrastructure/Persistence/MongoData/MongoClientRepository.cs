@@ -13,7 +13,6 @@ namespace Ecommerce.System.Infrastructure.Persistence.MongoData
             _clients = context.Clients;
         }
 
-        // Zmieniono typ zwracany z IEnumerable na List, aby pasował do interfejsu
         public async Task<List<Client>> GetAllAsync()
         {
             return await _clients.Find(_ => true).ToListAsync();

@@ -19,7 +19,6 @@ namespace Ecommerce.System.Infrastructure.Persistence.PostgreSQL
             return await _context.Clients.ToListAsync();
         }
 
-        // DODANO: Implementacja brakującej metody GetByIdAsync
         public async Task<Client?> GetByIdAsync(Guid id)
         {
             return await _context.Clients.FirstOrDefaultAsync(c => c.Id == id);

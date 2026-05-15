@@ -32,13 +32,11 @@ namespace Ecommerce.System.Infrastructure.Persistence.MongoData
             }
         }
 
-        // NAPRAWA: Zmiana typu zwracanego z List na IEnumerable, aby pasował do interfejsu
         public async Task<IEnumerable<Order>> GetByClientIdAsync(Guid clientId)
         {
             return await _orders.Find(o => o.ClientId == clientId).ToListAsync();
         }
 
-        // NAPRAWA: Zmiana typu zwracanego z List na IEnumerable, aby pasował do interfejsu
         public async Task<IEnumerable<Order>> GetAllAsync()
         {
             return await _orders.Find(_ => true).ToListAsync();

@@ -9,7 +9,6 @@ using MongoDB.Bson.Serialization.Serializers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. Konfiguracja Globalna MongoDB ---
 if (BsonSerializer.LookupSerializer<GuidSerializer>() == null)
 {
     BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
@@ -19,7 +18,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// --- 2. Dynamiczny wybór bazy danych ---
 var dbType = builder.Configuration["DatabaseSettings:Type"];
 
 if (dbType == "PostgreSQL")
@@ -39,12 +37,10 @@ else if (dbType == "MongoDB")
     builder.Services.AddScoped<IProductRepository, MongoProductRepository>();
 }
 
-// --- 3. Rejestracja usług biznesowych ---
 builder.Services.AddScoped<OrderService>();
 
 var app = builder.Build();
 
-// --- 4. Middleware ---
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

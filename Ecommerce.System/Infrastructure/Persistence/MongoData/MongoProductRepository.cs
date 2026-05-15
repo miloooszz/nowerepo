@@ -33,14 +33,12 @@ namespace Ecommerce.System.Infrastructure.Persistence.MongoData
 
         public async Task AddAsync(Product product)
         {
-            // Automatyczne uzupełnianie brakujących ID i powiązań przed zapisem
             PrepareProductHierarchy(product);
             await _products.InsertOneAsync(product);
         }
 
         public async Task UpdateAsync(Product product)
         {
-            // Przy aktualizacji również dbamy o spójność ID nowych elementów
             PrepareProductHierarchy(product);
             await _products.ReplaceOneAsync(p => p.Id == product.Id, product);
         }
@@ -57,10 +55,6 @@ namespace Ecommerce.System.Infrastructure.Persistence.MongoData
             }
         }
 
-        /// <summary>
-        /// Prywatna metoda pomocnicza dbająca o to, by każdy poziom 
-        /// zagnieżdżenia miał nadane ID i poprawne klucze obce.
-        /// </summary>
         private void PrepareProductHierarchy(Product product)
         {
             if (product.Id == Guid.Empty)
@@ -73,7 +67,6 @@ namespace Ecommerce.System.Infrastructure.Persistence.MongoData
                 if (variant.Id == Guid.Empty)
                     variant.Id = Guid.NewGuid();
 
-                // Ustawienie powiązania wariantu z produktem
                 variant.ProductId = product.Id;
 
                 if (variant.Attributes == null) continue;
@@ -83,7 +76,6 @@ namespace Ecommerce.System.Infrastructure.Persistence.MongoData
                     if (attr.Id == Guid.Empty)
                         attr.Id = Guid.NewGuid();
 
-                    // Ustawienie powiązania atrybutu z wariantem
                     attr.ProductVariantId = variant.Id;
                 }
             }

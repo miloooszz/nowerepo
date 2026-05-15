@@ -15,7 +15,6 @@ namespace Ecommerce.System.Infrastructure.Persistence.PostgreSQL
 
         public async Task<Product> GetByIdAsync(Guid id)
         {
-            // Szukamy produktu, który w swojej liście wariantów posiada ten konkretny ID
             return await _context.Products
                 .Include(p => p.Variants)
                 .ThenInclude(w => w.Attributes)

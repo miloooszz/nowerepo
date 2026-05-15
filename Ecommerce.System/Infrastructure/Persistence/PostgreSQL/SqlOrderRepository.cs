@@ -8,7 +8,6 @@ namespace Ecommerce.System.Infrastructure.Persistence.PostgreSQL
     {
         private readonly AppDbContext _context;
 
-        // NAPRAWA: Zmieniono nazwę z SqlClientRepository na SqlOrderRepository
         public SqlOrderRepository(AppDbContext context)
         {
             _context = context;

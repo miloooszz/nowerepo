@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Ecommerce.System.Core.Models
 {
-    [BsonIgnoreExtraElements] // Zapobiega błędom, gdy w bazie są dodatkowe pola
+    [BsonIgnoreExtraElements] 
     public class ProductVariant
     {
         [BsonId]
@@ -13,7 +13,6 @@ namespace Ecommerce.System.Core.Models
         [BsonGuidRepresentation(GuidRepresentation.Standard)]
         public Guid ProductId { get; set; }
 
-        // Mapujemy jawnie nazwę, aby pasowała niezależnie od wielkości liter w JSON/Bson
         [BsonElement("ean")]
         public string EAN { get; set; } = string.Empty;
 

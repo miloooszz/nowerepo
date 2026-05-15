@@ -21,9 +21,7 @@ namespace Ecommerce.System.Core.Models
         public decimal TotalAmount { get; set; }
 
         [BsonElement("status")]
-        public string Status { get; set; } = "Pending"; // Obecny status
-
-        // DODAJ TO: Lista wszystkich zmian statusu dla tego zamówienia
+        public string Status { get; set; } = "Pending"; 
         public List<OrderStatus> Statuses { get; set; } = new();
 
         [BsonElement("items")]
